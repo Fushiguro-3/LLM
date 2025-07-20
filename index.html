@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDMCET LMS - Upload</title>
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Rubik', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #1b3764, #4a6cb3);
+      background: url('./bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: start;
+      padding: 60px 20px 100px;
+      min-height: 100vh;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      padding: 35px 30px;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      text-align: center;
+      color: #fff;
+      margin-bottom: 25px;
+    }
+
+    label {
+      font-weight: 500;
+      margin-top: 10px;
+      display: block;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      margin-top: 6px;
+      margin-bottom: 15px;
+      font-size: 15px;
+      background: rgba(255, 255, 255, 0.2);
+      color: #000;
+    }
+
+    select:hover,
+    input:hover {
+      background-color: #f2f2f2;
+    }
+
+    input::placeholder {
+      color: #eee;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      font-size: 16px;
+      font-weight: bold;
+      background-color: #fff;
+      color: #1b3764;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background-color: #dce3ff;
+    }
+
+    #uploadsList {
+      margin-top: 40px;
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 20px;
+      border-radius: 10px;
+      color: #101010;
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #aaa;
+    }
+
+    a {
+      color: #d9e4ff;
+    }
+
+    .logout-box {
+      text-align: center;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="card">
+    <h1>Upload Course Material</h1>
+
+    <form id="uploadForm">
+      <label>Department:</label>
+      <select id="department" required>
+        <option value="">--Select Department--</option>
+        <option value="CSE">CSE</option>
+        <option value="AIML">AIML</option>
+        <option value="ISE">ISE</option>
+        <option value="ECE">ECE</option>
+        <option value="EEE">EEE</option>
+        <option value="MECH">MECH</option>
+        <option value="CIVIL">CIVIL</option>
+        <option value="ARCH">ARCH</option>
+      </select>
+
+      <label>Semester:</label>
+      <select id="semester" required>
+        <option value="">--Select Semester--</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+      </select>
+
+      <label>Subject:</label>
+      <input type="text" id="subject" placeholder="e.g. DBMS, OOPJ" required>
+
+      <label>Material Type:</label>
+      <select id="fileType" required>
+        <option value="">--Select Type--</option>
+        <option value="Notes">Notes</option>
+        <option value="Slides">Slides</option>
+        <option value="Assignment">Assignment</option>
+        <option value="PDF">PDF</option>
+      </select>
+
+      <label>Select File:</label>
+      <input type="file" id="file" required>
+
+      <button type="submit">Upload</button>
+    </form>
+
+    <div id="uploadsList">
+      <h2>Your Uploaded Materials</h2>
+      <p>Loading...</p>
+    </div>
+
+    <div class="logout-box">
+      <button id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <!-- Firebase Auth Check -->
+  <script type="module">
+    import { app } from './js/firebase.js';
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const docRef = doc(db, "users", user.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const role = docSnap.data().role;
+        if (role !== "teacher") {
+          window.location.href = "view.html";
+        }
+      } else {
+        window.location.href = "login.html";
+      }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      signOut(auth).then(() => {
+        window.location.href = "login.html";
+      });
+    });
+  </script>
+
+  <!-- Upload Logic -->
+  <script type="module" src="./js/upload.js"></script>
+</body>
+
+</html>

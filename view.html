@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SDMCET LMS - View Materials</title>
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Rubik', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: url('./bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      color: white;
+      min-height: 100vh;
+      padding: 50px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 20px;
+    }
+
+    .filter-box {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 12px;
+      max-width: 800px;
+      width: 100%;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      margin-bottom: 30px;
+    }
+
+    .filter-box select,
+    .filter-box input[type="text"] {
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      background: rgba(255, 255, 255, 0.2);
+      color: black;
+      width: 100%;
+      max-width: 30%;
+    }
+
+    .filter-box button {
+      padding: 10px;
+      font-size: 15px;
+      background: #ffffff;
+      color: #1b3764;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      width: 48%;
+      max-width: 150px;
+    }
+
+    .filter-box button:hover {
+      background-color: #dce3ff;
+    }
+
+    #materialList {
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .material-item {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(6px);
+      margin-bottom: 15px;
+      padding: 18px;
+      border-radius: 10px;
+      color: white;
+      transition: transform 0.2s ease;
+    }
+
+    .material-item:hover {
+      transform: translateY(-3px);
+    }
+
+    .material-item a {
+      color: #f7f9ff;
+      text-decoration: underline;
+    }
+
+    .button-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    @media screen and (max-width: 600px) {
+      .filter-box {
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .filter-box select,
+      .filter-box input[type="text"],
+      .button-row button {
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .button-row {
+        flex-direction: column;
+        max-width: 100%;
+      }
+    }
+     
+    input::placeholder {
+        color: black;
+        opacity: 1;
+      }
+  </style>
+</head>
+
+<body>
+
+  <h1>📚 View Course Materials</h1>
+
+  <div class="filter-box">
+    <select id="department">
+      <option value="">Department</option>
+      <option value="CSE">CSE</option>
+      <option value="AIML">AIML</option>
+      <option value="ISE">ISE</option>
+      <option value="ECE">ECE</option>
+      <option value="EEE">EEE</option>
+      <option value="MECH">MECH</option>
+      <option value="CIVIL">CIVIL</option>
+      <option value="ARCH">ARCH</option>
+    </select>
+
+    <select id="semester">
+      <option value="">Semester</option>
+      <option value="1">1</option>
+      <option value="2">2</option>
+      <option value="3">3</option>
+      <option value="4">4</option>
+      <option value="5">5</option>
+      <option value="6">6</option>
+      <option value="7">7</option>
+      <option value="8">8</option>
+    </select>
+
+    <input type="text" id="subject" placeholder="Subject (e.g. DBMS)" />
+
+    <div class="button-row">
+      <button id="filterBtn">Filter</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+  </div>
+
+  <div id="materialList">
+    <p>🔎 Filter to view available materials</p>
+  </div>
+
+  <script type="module">
+    import { app } from './js/firebase.js';
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
+
+    import {
+      getFirestore,
+      collection,
+      query,
+      where,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+      }
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      signOut(auth).then(() => {
+        window.location.href = "login.html";
+      });
+    });
+
+    document.getElementById("subject").addEventListener("input", function () {
+      this.value = this.value.toUpperCase();
+    });
+
+    document.getElementById("filterBtn").addEventListener("click", async () => {
+      const dept = document.getElementById("department").value;
+      const sem = document.getElementById("semester").value;
+      const sub = document.getElementById("subject").value.trim().toUpperCase();
+
+      const list = document.getElementById("materialList");
+      list.innerHTML = "<p>Loading...</p>";
+
+      if (!dept || !sem || !sub) {
+        list.innerHTML = "<p>⚠️ Please select all filters.</p>";
+        return;
+      }
+
+      try {
+        const q = query(
+          collection(db, "resources"),
+          where("department", "==", dept),
+          where("semester", "==", sem),
+          where("subject", "==", sub)
+        );
+
+        const snapshot = await getDocs(q);
+        list.innerHTML = "";
+
+        if (snapshot.empty) {
+          list.innerHTML = "<p>❌ No materials found.</p>";
+          return;
+        }
+
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const div = document.createElement("div");
+          div.className = "material-item";
+          div.innerHTML = `
+            <strong>📁 ${data.fileType}</strong> - ${data.subject}<br>
+            <span>📌 ${data.fileName}</span><br>
+            <a href="${data.fileUrl}" target="_blank">🔗 View Material</a>
+          `;
+          list.appendChild(div);
+        });
+      } catch (err) {
+        console.error("Error loading materials:", err);
+        list.innerHTML = "<p>Error loading data.</p>";
+      }
+    });
+  </script>
+</body>
+
+</html>

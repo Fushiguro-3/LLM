@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SDMCET LMS - Sign Up</title>
+  <link rel="icon" href="favicon.png" type="image/png" />
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Rubik', sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: linear-gradient(to right, #1b3764, #4a6cb3);
+      background: url('./bg.jpg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 40px 35px;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+      text-align: center;
+      color: white;
+      animation: fadeIn 1s ease;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 5px;
+    }
+
+    p {
+      font-size: 14px;
+      margin-top: 0;
+      color: #ddd;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px 14px;
+      margin: 12px 0;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      background-color: rgba(255, 255, 255, 0.2);
+      color: #000;
+      backdrop-filter: blur(4px);
+    }
+
+    input::placeholder {
+      color: #e3e3e3;
+    }
+
+    select {
+      color: black;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: #ffffff;
+      color: #1b3764;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #dfe4ff;
+    }
+
+    a {
+      display: inline-block;
+      margin-top: 15px;
+      color: #ffffff;
+      font-size: 14px;
+      text-decoration: underline;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media screen and (max-width: 500px) {
+      .glass-card {
+        padding: 30px 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="glass-card">
+    <h1>SDMCET LMS</h1>
+    <p>Create your account</p>
+
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+
+    <select id="role">
+      <option value="">Select Role</option>
+      <option value="student">Student</option>
+      <option value="teacher">Teacher</option>
+    </select>
+
+    <button id="signupBtn">Sign Up</button>
+    <a href="login.html">Already have an account? Login</a>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module" src="./js/firebase.js"></script>
+  <script type="module">
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-auth.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.5.2/firebase-firestore.js";
+    import { app } from './js/firebase.js';
+
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    document.getElementById('signupBtn').addEventListener('click', async () => {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const role = document.getElementById('role').value;
+
+      if (!email || !password || !role) {
+        alert("⚠️ Please fill in all fields.");
+        return;
+      }
+
+      try {
+        const userCred = await createUserWithEmailAndPassword(auth, email, password);
+        await setDoc(doc(db, "users", userCred.user.uid), {
+          email: userCred.user.email,
+          role: role
+        });
+        alert(`✅ Signed up successfully as ${role}`);
+        window.location.href = "index.html";
+      } catch (error) {
+        alert("❌ " + error.message);
+      }
+    });
+  </script>
+</body>
+</html>
