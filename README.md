@@ -3,7 +3,7 @@
 A **Role-Based Learning Management System** built using **HTML, CSS, JavaScript, and Firebase**.  
 It allows **teachers** to upload learning materials (PDFs, slides, notes) and **students** to view or download them securely.  
 
-![LMS Preview](./screenshots/homepage.png) <!-- Replace with actual screenshot path -->
+![LMS Preview](./home.png) <!-- Replace with actual screenshot path -->
 
 ---
 
